@@ -95,7 +95,6 @@ def plot():
     # vegetarian_emissions = beans_emissions + peas_emissions + pulses_emissions + soyabeans_emissions
 
     C, F, T = fair.forward.fair_scm(emissions=np.sum(emissions, axis = 0), useMultigas=False)
-    colors = ["r", "g", "y", "k"]
 
     if plot_key == "concentration":
         plot1.plot(FAOSTAT_years, C, c = 'k')
@@ -106,7 +105,7 @@ def plot():
     elif plot_key == "emission":
         labels = ["Poultry", "Pig", "Mutton and Goat", "Bovine"]
         for i in range(4):
-            plot1.fill_between(FAOSTAT_years, np.sum(emissions[:4-i], axis=0), label = labels[i], color=colors[i])
+            plot1.fill_between(FAOSTAT_years, np.sum(emissions[:4-i], axis=0), label = labels[i])
         plot1.legend(loc=2, fontsize=7)
         plot1.set_ylim((-1,22))
         plot1.set_ylabel(r"Fossil $CO_2$ Emissions (GtC)")
