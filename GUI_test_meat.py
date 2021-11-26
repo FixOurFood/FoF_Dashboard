@@ -8,47 +8,24 @@ NavigationToolbar2Tk)
 import fair
 from fair.RCPs import rcp3pd, rcp45, rcp6, rcp85
 
-# Load meat data
+# Define food items
+food_items = ["Bovine", "Goat", "Pig", "Poultry", "Beans", "Peas", "Pulses", "Soyabeans"]
+len_items = len(food_items)
+# mean emissions per kg of item in 2018 [kg CO2e / kg]
+mean_emissions = [70.5, 39.7, 12.3, 9.9, 1.8, 1.0, 1.8, 1.8]
 
-print("Loading Bovine meat data...")
-bovine_data = np.load("data/food/FAOSTAT_Bovine_data.npy")
-
-print("Loading Goat meat data...")
-goat_data = np.load("data/food/FAOSTAT_Goat_data.npy")
-
-print("Loading Pig meat data")
-pig_data = np.load("data/food/FAOSTAT_Pig_data.npy")
-
-print("Loading Poultry meat data")
-poultry_data = np.load("data/food/FAOSTAT_Poultry_data.npy")
-
-# Load vegetarian data
-
-print("Loading Beans meat data...")
-beans_data = np.load("data/food/FAOSTAT_Beans_data.npy")
-
-print("Loading Peas meat data...")
-peas_data = np.load("data/food/FAOSTAT_Peas_data.npy")
-
-print("Loading Pulses meat data")
-pulses_data = np.load("data/food/FAOSTAT_Pulses_data.npy")
-
-print("Loading Soyabeans meat data")
-soyabeans_data = np.load("data/food/FAOSTAT_Soyabeans_data.npy")
+# Load food data
+food_data = []
+for item in food_items:
+    print(f"Loading {item} data ...")
+    food_data.append(np.load(f"data/food/FAOSTAT_{item}_data.npy"))
 
 # Load population data
-
 print("Loading population data...")
-USA_population = np.load("data/population/Total_population_UN_median_USA.npy")
-Chile_population = np.load("data/population/Total_population_UN_median_Chile.npy")
-UK_population = np.load("data/population/Total_population_UN_median_UK.npy")
-World_population = np.load("data/population/Total_population_UN_median_world.npy")
-
-population_dict = {
-    "chile" : Chile_population,
-    "uk" : UK_population,
-    "usa" : USA_population
-}
+# USA_population = np.load("data/population/Total_population_UN_median_USA.npy")
+# Chile_population = np.load("data/population/Total_population_UN_median_Chile.npy")
+# UK_population = np.load("data/population/Total_population_UN_median_UK.npy")
+population = np.load("data/population/Total_population_UN_median_world.npy")
 
 country_codes = {
     "chile" : 152,
@@ -56,18 +33,6 @@ country_codes = {
     "usa" : 840
 }
 
-FAOSTAT_years = np.arange(1961, 2019)
-
-# mean emissions per kg of item in 2018 [kg CO2e / kg]
-mean_bovine_emissions = 70.5
-mean_goat_emissions = 39.7
-mean_pig_emissions = 12.3
-mean_poultry_emissions = 9.9
-
-mean_beans_emissions = 1.8
-mean_peas_emissions = 1.0
-mean_pulses_emissions = 1.8
-mean_soyabeans_emissions = 1.8
 
 glossary_dict = {
     "concentration":"""Atmospheric CO2 concentration
@@ -85,71 +50,51 @@ glossary_dict = {
     in degrees between projected atmospheric temperature
     and baseline expected from stable emissions, measured
     in Kelvin degrees"""
-
 }
 
-def scale_protein(bovine, goat, pig, poultry, beef_scale, vegetarian_scale):
+FAOSTAT_years = np.arange(1961, 2019)
 
+def scale_protein(protein, beef_scale, vegetarian_scale):
 
     meat_fraction = (4-vegetarian_scale)/4
     bovine_fraction = (4-beef_scale)/4
 
-    total = bovine + goat + pig + poultry
-    total_no_bovine =  total - bovine + bovine*bovine_fraction
+    total = np.sum(protein, axis=0)
+    total_no_bovine =  total - protein[0] + protein[0]*bovine_fraction
     meat_scale = total / total_no_bovine
-    return bovine_fraction, meat_scale, 1
+    return [bovine_fraction, meat_scale, meat_scale, meat_scale], 1
 
-# plot function is created for
-# plotting the graph in
-# tkinter window
+# function to generate the plots in tkinter canvas
 def plot():
-    # Read the selection and generate the arrays
 
+    # Read the selection and generate the arrays
     beef_value = beef_slider.get()
     vegetarian_value = vegetarian_slider.get()
-
     country_key = country_codes[region.get()]
     plot_key = plot_option.get()
-    # population = population_dict[region.get()]
-    population = World_population
 
-    # print(RCP_key)
-    # print(plot_key)
-
+    # Clear previous plots
     plot1.clear()
 
     # protein supply [gr / capita / day]
-    bovine_protein = bovine_data[(bovine_data[:, 0] == 674) & (bovine_data[:, 1] == country_key)][:,3]
-    goat_protein = goat_data[(goat_data[:, 0] == 674) & (goat_data[:, 1] == country_key)][:,3]
-    pig_protein = pig_data[(pig_data[:, 0] == 674) & (pig_data[:, 1] == country_key)][:,3]
-    poultry_protein = poultry_data[(poultry_data[:, 0] == 674) & (poultry_data[:, 1] == country_key)][:,3]
+    protein = []
+    for i in range(len_items):
+        protein.append( food_data[i][(food_data[i][:, 0] == 674) & (food_data[i][:, 1] == country_key)][:,3] )
 
-    beans_protein = beans_data[(beans_data[:, 0] == 674) & (beans_data[:, 1] == country_key)][:,3]
-    peas_protein = peas_data[(peas_data[:, 0] == 674) & (peas_data[:, 1] == country_key)][:,3]
-    pulses_protein = pulses_data[(pulses_data[:, 0] == 674) & (pulses_data[:, 1] == country_key)][:,3]
-    soyabeans_protein = soyabeans_data[(soyabeans_data[:, 0] == 674) & (soyabeans_data[:, 1] == country_key)][:,3]
-
-    bovine_scale, meat_scale, vegetarian_scale = scale_protein(bovine_protein, goat_protein, pig_protein, poultry_protein, beef_value, vegetarian_value)
+    # recompute bovine and meat scaling factors
+    meat_scale, vegetarian_scale = scale_protein(protein, beef_value, vegetarian_value)
 
     # per capita food supply emissions [kg CO2e / capita / year]
     # This is computed multiplying the food supply per item (kg/capita/day)
     # by the global mean specific GHGE per item [kg CO2e / kg], by the country population
     # and by the number of days on a year
+    emissions = []
+    for i in range(4):
+        emissions.append( food_data[i][(food_data[i][:, 0] == 10004) & (food_data[i][:, 1] == country_key)][:,3] * 365.25 * mean_emissions[i] * population / 1e12 * meat_scale[i] )
 
-    bovine_emissions = bovine_data[(bovine_data[:, 0] == 10004) & (bovine_data[:, 1] == country_key)][:,3] * 365.25 * mean_bovine_emissions * population / 1e12 * bovine_scale
-    goat_emissions = goat_data[(goat_data[:, 0] == 10004) & (goat_data[:, 1] == country_key)][:,3] * 365.25 * mean_goat_emissions * population / 1e12 * meat_scale
-    pig_emissions = pig_data[(pig_data[:, 0] == 10004) & (pig_data[:, 1] == country_key)][:,3] * 365.25 * mean_pig_emissions * population / 1e12 * meat_scale
-    poultry_emissions = poultry_data[(poultry_data[:, 0] == 10004) & (poultry_data[:, 1] == country_key)][:,3] * 365.25 * mean_poultry_emissions * population / 1e12 * meat_scale
+    # vegetarian_emissions = beans_emissions + peas_emissions + pulses_emissions + soyabeans_emissions
 
-    beans_emissions = beans_data[(beans_data[:, 0] == 10004) & (beans_data[:, 1] == country_key)][:,3] * 365.25 * mean_beans_emissions * population / 1e12 * vegetarian_scale
-    peas_emissions = peas_data[(peas_data[:, 0] == 10004) & (peas_data[:, 1] == country_key)][:,3] * 365.25 * mean_peas_emissions * population / 1e12 * vegetarian_scale
-    pulses_emissions = pulses_data[(pulses_data[:, 0] == 10004) & (pulses_data[:, 1] == country_key)][:,3] * 365.25 * mean_pulses_emissions * population / 1e12 * vegetarian_scale
-    soyabeans_emissions = soyabeans_data[(soyabeans_data[:, 0] == 10004) & (soyabeans_data[:, 1] == country_key)][:,3] * 365.25 * mean_soyabeans_emissions * population / 1e12 * vegetarian_scale
-
-    total_emissions =  bovine_emissions + goat_emissions + pig_emissions + poultry_emissions
-    vegetarian_emissions = beans_emissions + peas_emissions + pulses_emissions + soyabeans_emissions
-
-    C, F, T = fair.forward.fair_scm(emissions=total_emissions, useMultigas=False)
+    C, F, T = fair.forward.fair_scm(emissions=np.sum(emissions, axis = 0), useMultigas=False)
 
     if plot_key == "concentration":
         plot1.plot(FAOSTAT_years, C, c = 'k')
@@ -157,10 +102,9 @@ def plot():
         plot1.set_ylabel(r"$CO_2$ concentrations (PPM)")
 
     elif plot_key == "emission":
-        plot1.fill_between(FAOSTAT_years, bovine_emissions + goat_emissions + pig_emissions + poultry_emissions, label = "Poultry")
-        plot1.fill_between(FAOSTAT_years, bovine_emissions + goat_emissions + pig_emissions, label = "Pig")
-        plot1.fill_between(FAOSTAT_years, bovine_emissions + goat_emissions, label = "Mutton and Goat")
-        plot1.fill_between(FAOSTAT_years, bovine_emissions, label = "Bovine")
+        labels = ["Poultry", "Pig", "Mutton and Goat", "Bovine"]
+        for i in range(4):
+            plot1.fill_between(FAOSTAT_years, np.sum(emissions[:4-i], axis=0), label = labels[i])
         plot1.legend(loc=2, fontsize=7)
         plot1.set_ylim((-1,22))
         plot1.set_ylabel(r"Fossil $CO_2$ Emissions (GtC)")
@@ -176,7 +120,6 @@ def plot():
         plot1.plot(FAOSTAT_years, T, c = 'k')
         plot1.set_ylim((-1,2))
         plot1.set_ylabel(r"Temperature anomaly (K)")
-
 
     plot1.set_xlabel("Year")
     canvas.draw()
