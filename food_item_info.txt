@@ -1,0 +1,70 @@
+2511 :Cereals, starch:	4	:Wheat:	1.6410256
+2513 :Cereals, starch:	4	:Barley:	1.8382353
+2514 :Cereals, starch:	4	:Maize:	1.7
+2515 :Cereals, starch:	4	:Rye:	1.8382353
+2516 :Cereals, starch:	4	:Oats:	1.8382353
+2520 :Cereals, starch:	4	:Cereals:	0.9535
+2531 :Cereals, starch:	4	:Potatoes:	0.5
+2534 :Cereals, starch:	4	:RootsOther:	0.4
+2535 :Cereals, starch:	4	:Yams:	1.3
+2543 :Sugar, veg. oil:	6	:SweetenersOther:	0
+2546 :Pulses:	5	:Beans:	1.8
+2547 :Pulses:	5	:Peas:	1
+2549 :Pulses:	5	:Pulses:	1.8
+2551 :Nuts, seeds:	7	:Nuts:	0.4
+2555 :Pulses:	5	:Soyabeans:	1.8
+2556 :Nuts, seeds:	7	:Groundnuts:	3.2
+2558 :Sugar, veg. oil:	6	:RapeMustardseed:	1.6101695
+2560 :Nuts, seeds:	7	:Coconuts:	0.4
+2561 :Nuts, seeds:	7	:Sesame:	1.6101695
+2563 :Vegetables, fruit:	8	:Olives:	1.06
+2570 :Sugar, veg. oil:	6	:OilcropsOther:	1.6101695
+2586 :Sugar, veg. oil:	6	:OilcropsOil:	3.8
+2601 :Vegetables, fruit:	8	:Tomatoes:	2.1
+2602 :Vegetables, fruit:	8	:Onions:	0.5
+2605 :Vegetables, fruit:	8	:Vegetables:	0.5
+2611 :Vegetables, fruit:	8	:Oranges:	0.4
+2612 :Vegetables, fruit:	8	:Lemons:	0.4
+2613 :Vegetables, fruit:	8	:Grapefruit:	0.4
+2614 :Vegetables, fruit:	8	:Citrus:	0.4
+2615 :Vegetables, fruit:	8	:Bananas:	0.9
+2616 :Vegetables, fruit:	8	:Plantains:	0.9
+2617 :Vegetables, fruit:	8	:Apples:	0.4
+2618 :Vegetables, fruit:	8	:Pineapples:	1.1
+2619 :Vegetables, fruit:	8	:Dates:	1.1
+2620 :Vegetables, fruit:	8	:Grapes:	1.5
+2625 :Vegetables, fruit:	8	:FruitsOther:	1.1
+2630 :Other:	9	:Coffee:	28.5
+2633 :Other:	9	:CocoaBeans:	46.7
+2635 :Other:	9	:Tea:	21
+2640 :Other:	9	:Pepper:	1.6101695
+2641 :Vegetables, fruit:	8	:Pimento:	0.5
+2642 :Other:	9	:Cloves:	0.4
+2645 :Other:	9	:SpicesOther:	1.6101695
+2655 :Other:	9	:Wine:	1.8
+2656 :Other:	9	:Beer:	1.2
+2657 :Other:	9	:BeveragesFermented:	1.2
+2680 :Other:	9	:InfantFood:	16.4
+2731 :Ruminant meat:	0	:Bovine:	70.5
+2732 :Ruminant meat:	0	:Goat:	39.7
+2733 :Other meat:	1	:Pig:	12.3
+2734 :Other meat:	1	:Poultry:	9.9
+2735 :Other meat:	1	:MeatOther:	12.3
+2736 :Other meat:	1	:OffalsEdible:	0
+2740 :Dairy:	3	:ButterGhee:	8.3
+2743 :Dairy:	3	:Cream:	4.89
+2745 :Sugar, veg. oil:	6	:Honey:	1.46
+2761 :Fish, seafood:	10	:FreshwaterFish:	10.7
+2762 :Fish, seafood:	10	:DemersalFish:	10.7
+2763 :Fish, seafood:	10	:PelagicFish:	10.7
+2764 :Fish, seafood:	10	:MarineFishOther:	10.7
+2765 :Fish, seafood:	10	:Crustaceans:	26.9
+2766 :Fish, seafood:	10	:Cephalopods:	26.9
+2767 :Fish, seafood:	10	:MolluscsOther:	26.9
+2769 :Fish, seafood:	10	:AquaticAnimalsOthers:	10.7
+2775 :Vegetables, fruit:	8	:AquaticPlants:	0.5
+2781 :Non-food:	11	:FishBodyOil:	0
+2782 :Non-food:	11	:FishLiverOil:	0
+2805 :Cereals, starch:	4	:Rice:	4.5
+2948 :Dairy:	3	:Milk:	3.2
+2949 :Egg:	2	:Eggs:	4.7
