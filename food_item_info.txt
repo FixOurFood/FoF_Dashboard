@@ -66,5 +66,5 @@
 2781 :Non-food:	11	:FishBodyOil:	0
 2782 :Non-food:	11	:FishLiverOil:	0
 2805 :Cereals, starch:	4	:Rice:	4.5
-2948 :Dairy:	3	:Milk:	3.2
-2949 :Egg:	2	:Eggs:	4.7
+2848 :Dairy:	3	:Milk:	3.2
+2744 :Egg:	2	:Eggs:	4.7
