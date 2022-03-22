@@ -45,7 +45,7 @@ important widgets of the dashboard:
 """
 
 # load the food item data files for these codes
-fii = np.genfromtxt('food_item_info.txt', delimiter=":", dtype=None, names=('code', 'group', 'group_id', 'name', 'mean_emissions'), encoding=None)
+fii = pd.read_csv('data/food/food_item_info.csv', sep=':')
 len_items = len(fii)
 len_groups = len(np.unique(fii['group']))
 
@@ -54,6 +54,11 @@ group_names = [fii['group'][index] for index in sorted(index_label)]
 
 index_id = np.unique(fii['group_id'], return_index=True)[1]
 group_ids = [fii['group_id'][index] for index in sorted(index_id)]
+
+print(len_items, len_groups)
+print(group_names)
+print(group_ids)
+
 
 FAOSTAT_years = np.arange(1961, 2020)
 FAOSTAT_projected_years = np.arange(2020, 2101)
@@ -192,7 +197,7 @@ def timescale_factor(timescale, final_scale, length, start, model = 'linear'):
         base[start : start + timescale] = 1 - mu*gradient
         base[start + timescale:] = final_scale
     elif model == 'logistic':
-        gradient = 1 / (1 + np.exp(-0.5*(log_length + 1 - timescale)*(np.arange(log_length) - log_length / 2)))
+        gradient = 1 / (1 + np.exp(-0.5*(log_length + 1 - timescale)*(np.arange(log_length) - timescale / 2)))
         base[start : start + log_length] = 1 - mu*gradient
         base[start + log_length:] = final_scale
     return base
