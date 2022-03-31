@@ -1,8 +1,8 @@
-# FixOurFood Dashboard: A Minimum Viable Product
+# FixOurFood Dashboard:
 
 ## Installation
 
-The code is written purely in python and utilizes mostly standard libraries, with the exception of the FAIR (Finite Amplitude Impulse-Response) climate-carbon-cycle model package which can be installed doing `pip install fair`.
+The code is written in python and utilizes mostly standard libraries, with the exception of the FAIR (Finite Amplitude Impulse-Response) climate-carbon-cycle model package which can be installed doing `pip install fair`.
 
 ## Usage
 
