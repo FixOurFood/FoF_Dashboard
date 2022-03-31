@@ -104,13 +104,13 @@ for i, code in enumerate(fii['code']):
     emissions[i,len(FAOSTAT_years):] = population_ratio_projected * emissions[i,len(FAOSTAT_years)-1]
 
     weight[i,:len(FAOSTAT_years)] = food_data[(food_data['Item Code'] == code) & (food_data['Element Code'] == 10004)]['Value']
-    weight[i,len(FAOSTAT_years):] = population_ratio_projected * weight[i,len(FAOSTAT_years)-1]
+    weight[i,len(FAOSTAT_years):] = weight[i,len(FAOSTAT_years)-1]
 
     energy[i,:len(FAOSTAT_years)] = food_data[(food_data['Item Code'] == code) & (food_data['Element Code'] == 664)]['Value']
-    energy[i,len(FAOSTAT_years):] = population_ratio_projected * energy[i,len(FAOSTAT_years)-1]
+    energy[i,len(FAOSTAT_years):] = energy[i,len(FAOSTAT_years)-1]
 
     proteins[i,:len(FAOSTAT_years)] = food_data[(food_data['Item Code'] == code) & (food_data['Element Code'] == 674)]['Value']
-    proteins[i,len(FAOSTAT_years):] = population_ratio_projected * proteins[i,len(FAOSTAT_years)-1]
+    proteins[i,len(FAOSTAT_years):] = proteins[i,len(FAOSTAT_years)-1]
 
 glossary_dict = {
     "CO2 concentration":"""Atmospheric CO2 concentration
@@ -210,6 +210,7 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
         adoption = 'logistic'
     else:
         adoption = 'linear'
+
     ruminant_fraction = timescale_factor(timescale, ruminant_fraction, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
     meat_fraction = (7-meatfree)/7
     meat_fraction = timescale_factor(timescale, meat_fraction, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
@@ -229,7 +230,7 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
 
     othermeat_fraction = meat_fraction * (total_nutrient_meat - total_nutrient_scaled_ruminant) / total_nutrient_othermeat
 
-    # Scale down meat consumption
+    # Meat Free Days
     if vegetarian_intervention == 0:
         total_nutrient_scaled_othermeat =  total_nutrient_othermeat * othermeat_fraction
         total_nutrient_scaled_meat = meat_fraction * (total_nutrient_scaled_othermeat + total_nutrient_scaled_ruminant)
@@ -257,11 +258,20 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
         food_scale[fii['group_id'] == 0] = ruminant_fraction
         food_scale[fii['group_id'] == 1] = othermeat_fraction
 
-
+    # Type of vegetarian diet
     elif vegetarian_intervention == 1:
         one_minus_logistic = 1 - timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
         if vegetarian == 0:
-            food_scale = np.ones((len_items, len(FAOSTAT_years) + len(FAOSTAT_projected_years)))
+            total_nutrient_scaled_othermeat =  total_nutrient_othermeat * othermeat_fraction
+            total_nutrient_scaled_meat = meat_fraction * (total_nutrient_scaled_othermeat + total_nutrient_scaled_ruminant)
+            total_nutrient_minus_scaled_meat = total_nutrient - total_nutrient_scaled_meat
+            nomeat_fraction = total_nutrient_minus_scaled_meat / total_nutrient_nomeat
+            ruminant_fraction *= meat_fraction
+            total_nutrient_meat *= meat_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years) + len(FAOSTAT_projected_years))) * nomeat_fraction
+
+            food_scale[fii['group_id'] == 0] = ruminant_fraction
+            food_scale[fii['group_id'] == 1] = othermeat_fraction
 
         elif vegetarian == 1:
             total_vegetarian_nutrient = total_nutrient - total_nutrient_ruminant*one_minus_logistic
