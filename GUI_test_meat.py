@@ -82,8 +82,8 @@ food_data = pd.read_csv('data/food/food_supply_data.csv')
 # - One for estimated population for the 1961-2019 year range
 # - One for projected population for the 2020-2100 year range
 print("Loading population data ...")
-population = np.load("data/population/Total_population_UN_median_world.npy")
-projected = np.load("data/population/Total_population_UN_median_world_projected_2020_2100.npy")
+population = np.loadtxt("data/population/Total_population_UN_median_world.txt")
+projected = np.loadtxt("data/population/Total_population_UN_median_world_projected_2020_2100.txt")
 
 emissions = np.zeros((len_items, len(FAOSTAT_years) + len(FAOSTAT_projected_years)))
 emissions_groups = np.zeros((len_groups, len(FAOSTAT_years) + len(FAOSTAT_projected_years)))
