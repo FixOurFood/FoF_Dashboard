@@ -12,8 +12,8 @@ from CreateToolTip import *
 import sys
 sys.path.append('/home/juancordero/Documents/York/FixOurFood/PyOurFood')
 from pyourfood import food
-from pyourfood.population_data import UN_estimation, UN_projection
-from pyourfood.food_data import FAOSTAT
+from pyourfood.population.population_data import UN_world_1950_2019, UN_world_2020_2100
+from pyourfood.food.food_supply import FAOSTAT
 from pyourfood.utils.calendar_tools import days_in_year
 
 """
@@ -62,7 +62,9 @@ group_ids = [fii['group_id'][index] for index in sorted(index_id)]
 
 log_length = 25
 
-FAOSTAT_years_all = np.concatenate([FAOSTAT.years, UN_projection.years])
+FAOSTAT_years = np.unique(FAOSTAT.years)
+
+FAOSTAT_years_all = np.concatenate([FAOSTAT_years, np.unique(UN_world_2020_2100.years)])
 
 food_data = FAOSTAT.data
 
@@ -74,26 +76,28 @@ proteins = np.zeros_like(emissions)
 
 # Last food supply estimated value is used as pivot value
 # to scale as a function of projected population
-population_pivot = UN_estimation.population[-1]
-population_ratio_projected = UN_projection.population / population_pivot
+past_population = UN_world_1950_2019.extract_year(FAOSTAT_years)
+population_pivot = past_population.populations[-1]
+
+population_ratio_projected = UN_world_2020_2100.populations / population_pivot
 
 # First half of the array is filled with estimations from FAOSTAT food supply data
 # Second half of the array is filled with scaled values according to population growth from pivot point
-days = days_in_year(FAOSTAT.years)
+days = days_in_year(FAOSTAT_years)
 
 for i, code in enumerate(fii['code']):
 
-    weight[i,:len(FAOSTAT.years)] = food.food_supply(food_data, item=code)
-    weight[i,len(FAOSTAT.years):] = weight[i,len(FAOSTAT.years)-1]
+    weight[i,:len(FAOSTAT_years)] = FAOSTAT.extract_item(code).food
+    weight[i,len(FAOSTAT_years):] = weight[i,len(FAOSTAT_years)-1]
 
-    emissions[i, :len(FAOSTAT.years)] = food.food_supply(food_data, item=code) * days * fii['mean_emissions'][i] * UN_estimation.population / 1e12
-    emissions[i,len(FAOSTAT.years):] = population_ratio_projected * emissions[i,len(FAOSTAT.years)-1]
+    emissions[i, :len(FAOSTAT_years)] = FAOSTAT.extract_item(code).food * days * fii['mean_emissions'][i] * past_population.populations * 1e3 / 1e12
+    emissions[i,len(FAOSTAT_years):] = population_ratio_projected * emissions[i,len(FAOSTAT_years)-1]
 
-    energy[i,:len(FAOSTAT.years)] = food.energy_supply(food_data, item=code)
-    energy[i,len(FAOSTAT.years):] = energy[i,len(FAOSTAT.years)-1]
+    energy[i,:len(FAOSTAT_years)] = FAOSTAT.extract_item(code).energy
+    energy[i,len(FAOSTAT_years):] = energy[i,len(FAOSTAT_years)-1]
 
-    proteins[i,:len(FAOSTAT.years)] = food.protein_supply_quantity(food_data, item=code)
-    proteins[i,len(FAOSTAT.years):] = proteins[i,len(FAOSTAT.years)-1]
+    proteins[i,:len(FAOSTAT_years)] = FAOSTAT.extract_item(code).protein
+    proteins[i,len(FAOSTAT_years):] = proteins[i,len(FAOSTAT_years)-1]
 
 
 glossary_dict = {
@@ -195,9 +199,9 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
     else:
         adoption = 'linear'
 
-    ruminant_fraction = timescale_factor(timescale, ruminant_fraction, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+    ruminant_fraction = timescale_factor(timescale, ruminant_fraction, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
     meat_fraction = (7-meatfree)/7
-    meat_fraction = timescale_factor(timescale, meat_fraction, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+    meat_fraction = timescale_factor(timescale, meat_fraction, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
 
     total_nutrient_seafood = np.sum(nutrient[fii['group_id'] == 10], axis=0)
     total_nutrient_eggs = np.sum(nutrient[fii['group_id'] == 2], axis=0)
@@ -244,7 +248,7 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
 
     # Type of vegetarian diet
     elif vegetarian_intervention == 1:
-        one_minus_logistic = 1 - timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+        one_minus_logistic = 1 - timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
         if vegetarian == 0:
             total_nutrient_scaled_othermeat =  total_nutrient_othermeat * othermeat_fraction
             total_nutrient_scaled_meat = meat_fraction * (total_nutrient_scaled_othermeat + total_nutrient_scaled_ruminant)
@@ -252,7 +256,7 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
             nomeat_fraction = total_nutrient_minus_scaled_meat / total_nutrient_nomeat
             ruminant_fraction *= meat_fraction
             total_nutrient_meat *= meat_fraction
-            food_scale = np.ones((len_items, len(FAOSTAT.years) + len(FAOSTAT_projected_years))) * nomeat_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years_all))) * nomeat_fraction
 
             food_scale[fii['group_id'] == 0] = ruminant_fraction
             food_scale[fii['group_id'] == 1] = othermeat_fraction
@@ -260,39 +264,39 @@ def scale_food(timescale, nutrient, ruminant, vegetarian_intervention, meatfree,
         elif vegetarian == 1:
             total_vegetarian_nutrient = total_nutrient - total_nutrient_ruminant*one_minus_logistic
             vegetarian_fraction = total_nutrient / total_vegetarian_nutrient
-            food_scale = np.ones((len_items, len(FAOSTAT.years) + len(FAOSTAT_projected_years)))*vegetarian_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years_all)))*vegetarian_fraction
 
-            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
 
         elif vegetarian == 2:
             total_vegetarian_nutrient = total_nutrient - (total_nutrient_ruminant + total_nutrient_othermeat)*one_minus_logistic
             vegetarian_fraction = total_nutrient / total_vegetarian_nutrient
-            food_scale = np.ones((len_items, len(FAOSTAT.years) + len(FAOSTAT_projected_years)))*vegetarian_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years_all)))*vegetarian_fraction
 
-            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
 
         elif vegetarian == 3:
             total_vegetarian_nutrient = total_nutrient - (total_nutrient_ruminant + total_nutrient_othermeat + total_nutrient_seafood)*one_minus_logistic
             vegetarian_fraction = total_nutrient / total_vegetarian_nutrient
-            food_scale = np.ones((len_items, len(FAOSTAT.years) + len(FAOSTAT_projected_years)))*vegetarian_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years_all)))*vegetarian_fraction
 
-            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 10] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 10] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
 
         elif vegetarian == 4:
             total_vegetarian_nutrient = total_nutrient - (total_nutrient_ruminant + total_nutrient_othermeat + total_nutrient_seafood + total_nutrient_eggs + total_nutrient_dairy)*one_minus_logistic
             vegetarian_fraction = total_nutrient / total_vegetarian_nutrient
-            food_scale = np.ones((len_items, len(FAOSTAT.years) + len(FAOSTAT_projected_years)))*vegetarian_fraction
+            food_scale = np.ones((len_items, len(FAOSTAT_years_all)))*vegetarian_fraction
 
-            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 10] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 2] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
-            food_scale[fii['group_id'] == 3] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT.years)+1, model = adoption)
+            food_scale[fii['group_id'] == 0] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 1] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 10] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 2] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
+            food_scale[fii['group_id'] == 3] = timescale_factor(timescale, 0, len(FAOSTAT_years_all), len(FAOSTAT_years)+1, model = adoption)
 
-    food_scale[:, :len(FAOSTAT.years)] = 1
+    food_scale[:, :len(FAOSTAT_years)] = 1
     return food_scale
 
 # Functions to pack and unpack intervention widgets
@@ -365,7 +369,7 @@ def plot():
     if year:
         years = FAOSTAT_years_all
     else:
-        years = FAOSTAT.years
+        years = FAOSTAT_years
 
 
     # Show or hide options to select food groups
@@ -430,7 +434,7 @@ def plot():
 
         mask = fii['group']==food_group_value
         emissions_cumsum = np.cumsum(scaled_emissions[mask], axis=0)
-        food_names = fii['name'][mask]
+        food_names = fii['name'][mask].values
 
         for i in reversed(range(len(food_names))):
             plot1.fill_between(years, emissions_cumsum[i][:len(years)], label = food_names[i], alpha=0.5)
